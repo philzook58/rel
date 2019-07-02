@@ -20,8 +20,8 @@ tabulate f = [(x, f x) | x <- enumAll]
 tabulate2 :: (BEnum a, BEnum b) => (a -> b -> c) -> Rel (a,b) c
 tabulate2 f = [((x,y), f x y) | x <- enumAll, y <- enumAll]
 
-rcompose :: Eq b => Rel a b -> Rel b c -> Rel a c
-rcompose xs ys = [ (a,c)  | (a, b) <- xs, (b', c) <- ys, b' == b]
+rcompose :: Eq b => Rel b c -> Rel a b -> Rel a c
+rcompose xs ys = [ (a,c)  | (a, b) <- ys, (b', c) <- xs, b' == b]
 
 x <<< y = rcompose x y
 
@@ -57,6 +57,7 @@ tabulateSearch f = [(a,b) | a <- enumAll, b <- f a]
 searchRel :: Eq a => Rel a b -> (a -> [b])
 searchRel r a = [b | (a', b) <- r, a == a']
 
+
 power :: [a] -> [[a]] -- all subsets. 
 power (x:xs) = (power xs) ++ [ x : xs' | xs' <- power xs]  -- x is in or not.
 
@@ -66,11 +67,16 @@ rElem = [(a,xs) | xs <- power enumAll, a <- xs]
 power' :: Eq a => Rel a b -> Rel a [b]
 power' r = [ (a, searchRel r a) | a <- leftSet r]
 
+
 tabulatePartial :: BEnum a => (a -> Maybe b) -> Rel a b
 tabulatePartial f = [(a,b) | a <- enumAll, b <- toList (f a)]
 
 reflectInd :: (BoundedMeetSemiLattice (Rel a b)) => (a -> b -> Bool) -> Rel a b -- )BEnum a, BEnum b)
 reflectInd f = filter (uncurry f) top
+
+
+rOrd' :: (Ord a, BEnum a) =>Rel a a
+rOrd' = reflectInd (<=)
 
 -- rElem' = reflectInd elem -- going to build the top of [a]? 
 -- rOrd' = reflectInd (<=)
@@ -134,10 +140,10 @@ instance (Enum a, Enum b, Bounded a, Bounded b) => Enum (a,b) where
 rfan :: Eq a => Rel a b -> Rel a c -> Rel a (b,c) 
 rfan f g = [ (a, (b,c)) | (a,b) <- f, (a',c) <- g, a == a']
 
-rfst :: (Enum a, Bounded a, Enum b, Bounded b) => Rel (a,b) a 
+rfst :: BEnum (a,b) => Rel (a,b) a 
 rfst = tabulate fst -- map (fst . snd) rid
 
-rsnd :: (Enum a, Bounded a, Enum b, Bounded b) => Rel (a,b) b 
+rsnd :: BEnum (a,b) => Rel (a,b) b 
 rsnd = tabulate snd --  map (snd . snd) rid
 
 rleft :: (Enum a, Bounded a) => Rel a (Either a b) 
@@ -151,6 +157,13 @@ reither f g = [(Left a, c) | (a,c) <- f] ++ [(Right b, c) | (b,c) <- g] --  (lma
 
 
 
----
-swap r = [(b,a) | (a,b) <- r]
-par f g = [((a,b), (c,d)) | (a,c) <- f, (b, d) <- g ]
+
+--- goofy inefficient definitions
+dup :: (Eq a, Eq b, BEnum a, BEnum b) => Rel a (a,a)
+dup = rfan rid rid
+swap ::(Eq a, Eq b, BEnum (a,b)) => Rel (a,b) (b,a)
+swap = rfan rsnd rfst
+par :: (Eq a, Eq c, BEnum a, BEnum c) => Rel a b -> Rel c d -> Rel (a,c) (b,d) 
+par f g =  rfan (rcompose f rfst) (rcompose g rsnd)
+
+    -- [((a,b), (c,d)) | (a,c) <- f, (b, d) <- g ]

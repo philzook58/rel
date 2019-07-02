@@ -6,7 +6,7 @@ import qualified Hedgehog.Range as Range
 import ListRel hiding ((===))
 
 -- a delapidated attempt at using hedgehog
-
+{-
 prop_reverse :: Property
 prop_reverse =
   property $ do
@@ -54,7 +54,7 @@ prop_top = property $ do
 prop_iso_search = property $ do
     r <- forAll simplerel
     assert ((tabulateSearch (searchRel r)) `rEq` r)
-
+-}
 {-
 
 other properties
