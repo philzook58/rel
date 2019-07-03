@@ -24,6 +24,7 @@ dependencies:
 - profunctors
 - lattices >= 2
 - containers 
+- logict
 
 library:
   source-dirs: src
