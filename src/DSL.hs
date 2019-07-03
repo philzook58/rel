@@ -15,3 +15,10 @@ data PF a b where
     Split :: PF a b -> PF c b -> PF (a :+: c) b
     Lft :: PF a (a :+: b)
     Rgt :: PF b (a :+: b)
+    -- Cata :: PF (f a) a -> PF (Fix f) a
+    -- Hylo
+    -- Ana
+    -- 
+
+-- PF is something like the initial encoding of the Arrow typeclass
+-- instance Arrow PF

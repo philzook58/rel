@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - profunctors
 - lattices >= 2
+- containers 
 
 library:
   source-dirs: src

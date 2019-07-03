@@ -57,7 +57,6 @@ tabulateSearch f = [(a,b) | a <- enumAll, b <- f a]
 searchRel :: Eq a => Rel a b -> (a -> [b])
 searchRel r a = [b | (a', b) <- r, a == a']
 
-
 power :: [a] -> [[a]] -- all subsets. 
 power (x:xs) = (power xs) ++ [ x : xs' | xs' <- power xs]  -- x is in or not.
 
@@ -73,7 +72,6 @@ tabulatePartial f = [(a,b) | a <- enumAll, b <- toList (f a)]
 
 reflectInd :: (BoundedMeetSemiLattice (Rel a b)) => (a -> b -> Bool) -> Rel a b -- )BEnum a, BEnum b)
 reflectInd f = filter (uncurry f) top
-
 
 rOrd' :: (Ord a, BEnum a) =>Rel a a
 rOrd' = reflectInd (<=)
