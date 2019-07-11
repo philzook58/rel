@@ -20,6 +20,8 @@ req = (rsub x y) && (rsub y x)
 
 class Category, Lattice => Relation
    converse :: k a b -> k b a
+   rSub :: 
+
 
 
 
