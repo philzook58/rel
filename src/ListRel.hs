@@ -165,3 +165,11 @@ par :: (Eq a, Eq c, BEnum a, BEnum c) => Rel a b -> Rel c d -> Rel (a,c) (b,d)
 par f g =  rfan (rcompose f rfst) (rcompose g rsnd)
 
     -- [((a,b), (c,d)) | (a,c) <- f, (b, d) <- g ]
+
+{-
+Specialized things for "square" relations
+Transition systems, abstract rewrite systes, graphs
+
+reach :: Rel a a -> Rel a a -- transitive closure
+
+-}

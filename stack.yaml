@@ -41,6 +41,7 @@ extra-deps:
 - lattices-2@sha256:e163e828fb904a51daf55e5bbb761146faba94b41c607d6def012e7a2335a422,3476
 - universe-base-1.1.1@sha256:1313ee7480fa14e7f77345b9c2dceb402404f7c6bbae8105ca9bf8a85ca1aa2e,2459
 - universe-reverse-instances-1.1@sha256:3383f11ddccfbe7255460f1d57999794503e1d7a717b5f3315aa2c207ac30ced,1283
+- sbv-8.3@sha256:a80a8ce2d9eaceffc23b862a55ea835c4c7b8018dc230238e177a279a9d944bd,17917
 # Override default flag values for local packages and extra-deps
 # flags: {}
 

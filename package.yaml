@@ -25,6 +25,7 @@ dependencies:
 - lattices >= 2
 - containers 
 - logict
+- sbv
 
 library:
   source-dirs: src
