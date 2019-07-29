@@ -8,6 +8,7 @@ import Data.Functor.Foldable
 import GHC.Generics hiding ((:+:))
 import Data.Functor.Const
 import Data.Coerce
+import Control.Arrow ((&&&), (|||))
 type a :+: b = Either a b
 -- type Void = V1
 -- type Unit = U1
@@ -29,15 +30,31 @@ data Fun a b where
 
     -- Hylo
     -- Ana
-    Curry :: Fun (a,b) c -> Fun (Fun a b) c
-    UnCurry :: Fun (Fun a b) c -> Fun (a,b) c
-    Apply :: Fun (Fun a b, a) b
+    -- Curry :: Fun (a,b) c -> Fun a (Fun b c)
+    -- UnCurry :: Fun a (Fun b c) -> Fun (a,b) c
+    -- Apply :: Fun (Fun a b, a) b
     Coerce :: Coercible a b => Fun a b
 
-    Cata :: Fun (f a) a -> Fun (Fix f) a
-    -- GenTo :: Generic a => Fun a (Rep a p)
+    --Cata :: Fun (f a) a -> Fun (Fix f) a
+    -- GenTo :: Generic a => Fun a (Rep a p) -- Kind problems
     -- GenFrom :: Generic a => Fun (Rep a p) a
     -- Lit :: (a -> b) -> Fun a b
+
+interp :: Fun a b -> (a -> b) -- or (Cartesian, yada ayda ) => k a b
+interp Id = id
+interp Fst = fst
+interp (Comp f g) = (interp f) . (interp g) 
+interp Snd = snd
+interp (Fan f g) = (interp f) &&& (interp g)
+interp Lft = Left
+interp Rgt = Right
+interp (Split f g) = (interp f) ||| (interp g)
+interp Coerce = coerce
+-- interp (Curry f) = curry (interp f) -- require a typeclass?
+-- interp (UnCurry f) (a,b) = interp (interp f) a
+-- interp Apply = \(f,x) -> (interp f) x
+
+
 newtype Bool' = Bool' (() :+: ())
 newtype NatF a = NatF (() :+: a)
 type Nat = Fix NatF
@@ -64,12 +81,24 @@ second :: Fun a b -> Fun (c,a) (c ,b)
 second g = par Id g  
 -- dist :: Fun (b :+: c, a) ((b, a) :+: (c, a))
 -- dist = Split Id Id :: Fun (a,b) :+: ()
-{-
+-- DistL . (Split Snd Snd) .
 ite :: Fun (Bool', (a, a)) a  
-ite = (Split Fst Snd) . DistL . (Par DistL Id) . assocl where
-     help :: ((Bool',a), a)  ((a,a) :+: (a,a))
-     help = (Par Fst . DistL Id)
- -}  
+ite = (Split Fst Snd) . h3 . h2 . h1 . first (first Coerce) . assocl where
+    h1 :: Fun ((() :+: (),a), a)  (((),a) :+: ((),a),a )
+    h1 =  (first DistL)
+    h2 :: Fun (((),a) :+: ((),a),a ) (a :+: a, a)
+    h2 = first $ Split (Lft . Snd) (Rgt . Snd)
+    h3 :: Fun  (a :+: a, a) ((a,a) :+: (a,a))
+    h3 = DistL
+
+
+
+
+-- DistL . (Split Snd Snd) .
+-- ite :: Fun (Bool', (a, a)) a  
+--ite = (Split Fst Snd) . DistL . (Par DistL Id) . assocl where
+
+
 
 
 -- PF is something like the initial encoding of the Arrow typeclass
