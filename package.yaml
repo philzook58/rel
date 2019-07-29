@@ -26,6 +26,7 @@ dependencies:
 - containers 
 - logict
 - sbv
+- recursion-schemes
 
 library:
   source-dirs: src
