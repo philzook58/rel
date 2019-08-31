@@ -13,6 +13,15 @@ data UniTree a where
     --Rig :: UniTree b -> UniTree (Either a b)
     --Unit :: UniTree ()
     --Fix :: UniTree f (Fix f) -> UniTree (Fix f)
+Non Gadt Form -- Generics with Variables.
+
+data E v a b = Lef a | Rig b | EVar v
+data T v a b = Tup a b | EVar v
+data U v = Unit | UVar v
+
+or intersperse Either Int K
+
+
 -}
 
 -- Not doing the gadt may be prefereable. 
@@ -23,10 +32,14 @@ type UniTree = UniTree' Int
 
 {-
 unififcation-fd
+Is using this premature optimization
+
 
 data UniTreeF a = Tup a a | Unit | Lef a | Rig a deriving (Functor, Foldable, Traversable, Applicative)
 type UniTree = UTerm UniTreeF IntVar
 
+instance Unifiable UniTreeF where
+    zipMatch Unit Unit = 
 
 
 -}
