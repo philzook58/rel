@@ -182,6 +182,7 @@ ex2 = Cata TestJ (MapJust (Cata TestN MapNothing))
 
 cata :: (f a -> a) -> (Fix f) -> a
 cata f = f (fmap (cata f)) x -}
+{-
 data HCompose a b where
     HCompose :: HCompose '( k, k' ) ('RCompose k k') -- do I want 'RCpomose or RCompose?
 data HApply a b where
@@ -194,6 +195,7 @@ data Curry a b where
 
 ex1 :: HApply '( Not , 'True) 'False
 ex1 = HApply NotTF
+-}
 {-
 
 Other operators:
