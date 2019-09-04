@@ -14,6 +14,10 @@ type BEnum a = (Enum a, Bounded a)
 enumAll :: (BEnum a) => [a]
 enumAll = [minBound .. maxBound]
 
+{- finite enumation :: Enum a -> Int -> [a] = take n [0 .. ] 
+Could be useful for inductive data types?
+-}
+
 tabulate :: (BEnum a) => (a -> b) -> Rel a b
 tabulate f = [(x, f x) | x <- enumAll]
 
@@ -171,5 +175,6 @@ Specialized things for "square" relations
 Transition systems, abstract rewrite systes, graphs
 
 reach :: Rel a a -> Rel a a -- transitive closure
-
+symm x = join x (converse x)
+ 
 -}

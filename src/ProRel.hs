@@ -1,7 +1,9 @@
-{-# LANGUAGE TypeOperators, GADTs, DataKinds, RankNTypes, PolyKinds, ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators, GADTs, DataKinds, RankNTypes, PolyKinds, ScopedTypeVariables,
+  PatternSynonyms #-}
 module ProRel where
 import Data.Profunctor.Composition (Procompose (..), Rift (..))
 import Data.Profunctor ((:->))
+import Data.Profunctor.Ran
 import Data.Type.Equality 
 import Data.Void
 {-
@@ -15,6 +17,21 @@ data Nat = S Nat | Z deriving (Eq, Show)
 data Plus a b where
     PZ :: Plus '( 'Z, a) a
     PS :: Plus '( a,b) c -> Plus '( 'S a, b) c 
+
+-- Inequality relation
+data LTE a b where
+    LTERefl :: LTE n n
+    LTESucc :: LTE n m -> LTE n ('S m)
+
+data Mul a b where
+    MZ :: Mul '( 'Z, n) 'Z
+    MS :: Mul '( n, m) p' -> Plus '( m, p') p -> Mul '( 'S n, m) p
+
+{-
+Subtraction as a galois connection
+
+Division
+-}
 
 data And a b where
     AndTT :: And '( 'True, 'True) 'True
@@ -39,6 +56,8 @@ type Par f g = Fan (f <<< Fst) (g <<< Snd)
 data Par' f g a b where
     Par' :: f a b -> g c d -> Par' f g '(a, c) '( b, d)
 
+type Dup  = Fan Id Id
+type Swap = Fan Snd Fst
 -- Does fan exist in the profunctor package? This one is profunctorial
 -- I suppose it works with any bifunctor?
 
@@ -77,7 +96,11 @@ data Trans k a b where
 data RCompose k k' a b where
     RCompose :: k b c -> k' a b -> RCompose k k' a c
 
-type RCompose' = Procompose
+{-
+-- Procompose is not polykinded?
+type RCompose = Procompose
+pattern RCompose = Procompose
+-}
 type k <<< k' = RCompose k k' 
 type k >>> k' = RCompose k' k
 
@@ -106,6 +129,7 @@ indeq (Iso to from) = REq to'' from'' where
     from'' :: k' :-> k
     from'' = case larry of RSub f -> f
     -}
+-- http://stedolan.net/research/semirings.pdf
 
 -- Check out "term rewriting and all that"
 -- This is also the reflection without remorse data type
@@ -131,7 +155,58 @@ data NFold n k a b where
 -- newtype SingArr a b = SingArr (Sing a -> Sing b)
 -- type a --> b = SingArr a b
 
+data MapMaybe k a b where
+    MapJust :: k a b -> MapMaybe k ('Just a) ('Just b)
+    MapNothing :: MapMaybe k 'Nothing 'Nothing
 
+data Cata map k a b where
+    Cata :: k fa a -> map (Cata map k) x fa  -> Cata map k ('Fix x) a
+data MapList k a b where
+    MapCons :: k a b -> MapList k as bs -> MapList k (a ': as) (b ': bs)
+    MapNil :: MapList k '[] '[]
+
+data Fix f = Fix (f (Fix f))
+
+-- this is pretty arcane
+
+
+--     Cata :: (map k) fa fb -> Cata map (map k) a b -> Cata map k a b
+data Test a b where
+    TestN :: Test 'Nothing 'Z
+    TestJ :: Test ('Just n) ('S n)
+-- get length of list
+-- makes naturals Fix Maybe
+ex2 :: Cata MapMaybe Test ('Fix ('Just ('Fix 'Nothing))) ('S 'Z)
+ex2 = Cata TestJ (MapJust (Cata TestN MapNothing))
+{- 
+
+cata :: (f a -> a) -> (Fix f) -> a
+cata f = f (fmap (cata f)) x -}
+data HCompose a b where
+    HCompose :: HCompose '( k, k' ) ('RCompose k k') -- do I want 'RCpomose or RCompose?
+data HApply a b where
+    HApply :: k a b -> HApply '( k , a ) b
+-- but relations don't have currying?
+data UnCurry a b where
+    UnCurry :: k a k' -> k' b c -> UnCurry k '(a, b) c
+data Curry a b where
+    Curry :: k (a,b) c -> k' a k -> Curry k a k'
+
+ex1 :: HApply '( Not , 'True) 'False
+ex1 = HApply NotTF
+{-
+
+Other operators:
+Shrink
+Override
+Domain Restrict
+shunting
+
+Relation properties - iso, etc.
+Power
+
+
+-}
 
     {-
 type IndEq k k' = forall k''. (k <<< k'') :-> (k' <<< k'')
@@ -174,11 +249,23 @@ type k \/ k' = RJoin k k'
 -- Ran / Rift from profunctor. They are both Right Kan? Lift vs extension?
 
 -- it's something like this
-newtype RDiv g j a b = RDiv { runRDiv :: forall x. g x a -> j x b }
+-- newtype RDiv g j a b = RDiv { runRDiv :: forall x. g x a -> j x b }
+-- type RDiv = Ran
+newtype RDiv p q a b = RDiv {runRDiv :: forall x. p x a -> q x b}
 -- forall x. RSub (ProCompose x j) g <-> RSub x (RDiv g j)
 -- 
-
+{-
 -- newtype Galois f g = { forall r p. (RSub (f r) p) <-> RSub r (g p) }
+Also consider unit counit form
+http://hackage.haskell.org/package/profunctors-5.4/docs/Data-Profunctor-Adjunction.html
+
+data Galois f g = unit :: q  :-> g f p, counit g (f q) :-> p
+
+
+yoneda - the split representation of relation?
+
+
+-}
 -- 
 --
 -- newtype RSub' k k' = RSub' { forall x a b. RCompose k x a b ->RCompose k' x a b}
@@ -200,6 +287,20 @@ type g \\ j = LDiv g j -- parse error on single slash
 -- exists gj. forall k. (ProCompose k j :-> g) <-> k :-> gj
 data RDiv g j where -- direct universal property
     RDiv :: forall k. (ProCompose k j :-> g) <-> k :-> gj
+
+-}
+
+-- It would be nice to be able to annotate kinds
+-- type RShrink :: (r :: a -> b -> *) -> (p :: a -> a -> *) -> (a -> b -> *) 
+-- = r /\ (RDiv p (RCon r))
+type RShrink r p a b = r /\ (RDiv p (RCon r))
+{-
+http://hackage.haskell.org/package/profunctors-5.4/docs/Data-Profunctor-Composition.html#v:mu
+interesting one
+mu :: Category p => Procompose p p :-> p
+procomposed :: Category p => Procompose p p a b -> p a b
+
+idl uses (->) as identity. Interesting
 
 -}
 
@@ -235,6 +336,9 @@ prop_top _ = top
 
 prop_bottom :: Bottom :-> k
 prop_bottom (Bottom x) = absurd x
+
+bottom_compose :: REq (k <<< Bottom) Bottom
+bottom_compose = REq (\(RCompose k (Bottom b)) -> absurd b) prop_bottom
 
 data Iso a b = Iso {to :: a -> b, from :: b -> a}
 type a <-> b = Iso a b
@@ -279,18 +383,6 @@ prop_meet_comm
 prop_join_univ :: R1 -> R1 -> R1 -> Bool
 prop_join_univ x y z = ((x \/ y) <~ z) == ((x <~ z) && (y <~ z))
 
-prop_join :: R1 -> R1  -> Bool
-prop_join x y = y <~ (x \/ y) 
-
-
-prop_meet_univ :: R1 -> R1 -> R1 -> Bool
-prop_meet_univ x y z = (z <~ (x /\ y)) == ((z <~ x) && (z <~ y))
-
-prop_top :: R1 -> Bool
-prop_top x = x <~ top
-
-prop_bottom :: R1 -> Bool
-prop_bottom x = bottom <~ x
 
 prop_bottom' :: R1 -> Bool
 prop_bottom' x = (x <<< bottom) ~~ (bottom :: R1)
@@ -301,8 +393,6 @@ prop_trans_iso x = untrans (trans x) == x
 prop_rdiv :: Rel Bool Ordering -> Rel Word8 Ordering -> Bool
 prop_rdiv g j = (j <<< (rdiv g j)) <~ g
 
-prop_con :: R1 -> Bool
-prop_con x = con (con x) ~~ x
 
 prop_rdiv' :: Rel Bool Word8 -> Rel Bool Ordering -> Rel Word8 Ordering -> Bool
 prop_rdiv' x g j = (x <~ (rdiv g j)) == ((j <<< x) <~ g) 
