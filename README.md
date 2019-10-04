@@ -1,8 +1,12 @@
 # rel
 
-A blog post:
+Some stuff on relation algebra in Haskell.
 
-http://www.philipzucker.com/a-short-skinny-on-relations-towards-the-algebra-of-programming/
+
+Explanatory Blog posts:
+
+- http://www.philipzucker.com/a-short-skinny-on-relations-towards-the-algebra-of-programming/
+- http://www.philipzucker.com/relational-algebra-with-fancy-types/
 
 
 Links:
